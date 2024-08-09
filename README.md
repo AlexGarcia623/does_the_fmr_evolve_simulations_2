@@ -1,6 +1,6 @@
 # Does the FMR evolve with redshift? II: The Evolution in Normalisation of the Mass-Metallicity Relation
 
-This repo contains the analysis scripts, figures, and data products from the paper Garcia et al. (2024b)
+This repo contains the analysis scripts, figures, and data products from the paper Garcia et al. (2024c)
 
 ## Contents
 
@@ -23,6 +23,12 @@ Contains pdf versions of all figures
 
 ### Rest of files
 
+Make Figures
+
+- make_all_figs.py -- Generate all figures (excluding .key files)
+
+Individual Figures:
+
 - appendix_A1.py -- Generate Figure A1
 - appendix_B1.py -- Generate Figure B1
 - appendix_B2.py -- Generate Figure B2
@@ -36,11 +42,12 @@ Contains pdf versions of all figures
 - Figure7.key -- Keynote file used to make Figure 7
 - Figure8.py  -- Generate Figure 8
 
+Helpers
 
 - helpers.py  -- Contains helper functions for all files
 - plotting.py -- Contains useful functions for plotting
 - Curti.py    -- Contains functions related to Appendix B
-- alpha_types -- Contains useful functions for epsilon portion of analysis (name carried over from previous study)
+- alpha_types -- Contains useful functions for epsilon portion of analysis (alpha name carried over from previous study)
 
 ## Questions Regarding scripts/paper
 
