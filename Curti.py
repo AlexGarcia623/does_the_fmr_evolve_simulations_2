@@ -64,12 +64,9 @@ def get_Curti_FMR_params(sim,STARS_OR_GAS='GAS'):
         max_iter = int(1e6)
     params, cov = curve_fit(Curti_MZR, 10**MZR_M_real, MZR_Z_real,p0=[9.0,0.3,1.2,10**10.5],
                             maxfev=max_iter)
-    params[3] = np.log10(params[3])
-    pretty_print = [f"{param:0.2f}" for param in params]
-    
-    params[3] = 10**(params[3])
     
     Z0 = params[0]
+    Z0_uncer = np.sqrt(np.diag(cov))[0]
     
     combined_data = np.vstack((10**MZR_M_real,real_SFR))
     
@@ -78,12 +75,14 @@ def get_Curti_FMR_params(sim,STARS_OR_GAS='GAS'):
     params, cov = curve_fit(Curti_FMR_wrapper, combined_data, MZR_Z_real, p0=[0.28,1.2,10.11,0.56],
                             maxfev=max_iter)
         
-    pretty_print = [f"{param:0.2f}" for param in params]
     print('FMR')
-    for _ in pretty_print:
-        print(_)
-    
     FMR_params = [Z0, *params]
+    FMR_uncert = [Z0_uncer, *np.sqrt(np.diag(cov))]
+    ps = ['Z0', 'gamma', 'beta', 'm0', 'm1']
+    pretty_print = [f"{param:0.2f}" for param in FMR_params]
+    for index, _ in enumerate(pretty_print):
+        print(ps[index] + ': ' + _ + ' +/- ' + f"{FMR_uncert[index]:0.2f}")
+
     return FMR_params
 
 
