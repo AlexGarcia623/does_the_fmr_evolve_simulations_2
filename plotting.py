@@ -106,17 +106,17 @@ def make_MZR_prediction_fig(sim,all_z_fit,ax_real,ax_fake,ax_offsets,
     
     snapshots, snap2z, BLUE_DIR = switch_sim(sim)
     
-    star_mass, SFR, Z_use, redshifts = get_all_redshifts(sim,all_z_fit,THRESHOLD=THRESHOLD)
+    star_mass_all, SFR_all, Z_use_all, redshifts_all = get_all_redshifts(sim,all_z_fit,THRESHOLD=THRESHOLD)
 
     if function == Curti_FMR: ## Curti has its own function
         return
     
     min_alpha, *params = get_z0_alpha(sim, function=function)
-    best_mu = star_mass - min_alpha*np.log10(SFR)
+    best_mu = star_mass_all - min_alpha*np.log10(SFR_all)
     plot_mu = np.linspace(np.min(best_mu),np.max(best_mu),100)
     best_line = function(plot_mu, *params)
     
-    unique = np.unique(redshifts)
+    unique = np.unique(redshifts_all)
     cmap = cmr.get_sub_cmap('cmr.guppy', 0.0, 1.0, N=len(unique))
     newcolors = np.linspace(0, 1, len(unique))
     colors = [ cmap(x) for x in newcolors[::-1] ]
@@ -128,9 +128,13 @@ def make_MZR_prediction_fig(sim,all_z_fit,ax_real,ax_fake,ax_offsets,
     z0_MZR = None
     
     for index, snap in enumerate(snapshots):
-        star_mass, Z_true, SFR = get_one_redshift(BLUE_DIR,snap,
-                                                  STARS_OR_GAS=STARS_OR_GAS)
-        
+        #star_mass, Z_true, SFR = get_one_redshift(BLUE_DIR,snap,
+        #                                          STARS_OR_GAS=STARS_OR_GAS)
+        mask = (redshifts_all == index)
+        star_mass = star_mass_all[mask]
+        Z_true    = Z_use_all[mask]
+        SFR       = SFR_all[mask]
+
         MZR_M_real, MZR_Z_real, real_SFR = get_medians(star_mass,Z_true,SFR,
                                                        width=width,
                                                        min_samp=min_samp)

@@ -82,5 +82,8 @@ ax.set_xticklabels([r'${\rm Illustris}$',r'${\rm TNG}$',r'${\rm EAGLE}$',r'${\rm
 
 ax.set_ylabel(r'${\rm MSE}$')
 
+ymin, ymax = ax.get_ylim()
+ax.set_ylim(ymin,ymax*1.5)
+
 plt.tight_layout()
 plt.savefig(savedir + 'AppendixA1.pdf', bbox_inches='tight')
