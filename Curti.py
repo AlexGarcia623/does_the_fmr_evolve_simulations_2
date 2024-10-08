@@ -62,7 +62,7 @@ def get_Curti_FMR_params(sim,STARS_OR_GAS='GAS'):
     max_iter = 5000
     if sim == "SIMBA": ## SIMBA does not converge at low max_iter
         max_iter = int(1e6)
-    params, cov = curve_fit(Curti_MZR, 10**MZR_M_real, MZR_Z_real,p0=[9.0,0.3,1.2,10**10.5],
+    params, cov = curve_fit(Curti_MZR, 10**MZR_M_real, MZR_Z_real,p0=[9.25,0.3,1.2,10**10.5],
                             maxfev=max_iter)
     
     Z0 = params[0]
@@ -75,7 +75,7 @@ def get_Curti_FMR_params(sim,STARS_OR_GAS='GAS'):
     params, cov = curve_fit(Curti_FMR_wrapper, combined_data, MZR_Z_real, p0=[0.28,1.2,10.11,0.56],
                             maxfev=max_iter)
         
-    print('FMR')
+    print(f"{sim}'s FMR")
     FMR_params = [Z0, *params]
     FMR_uncert = [Z0_uncer, *np.sqrt(np.diag(cov))]
     ps = ['Z0', 'gamma', 'beta', 'm0', 'm1']

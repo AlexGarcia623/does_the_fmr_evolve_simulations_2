@@ -53,9 +53,6 @@ def get_epsilon_evo(sim,n_bootstrap=5):
     
     unique = np.arange(0,9)
     
-    if sim == "SIMBA":
-        unique = np.arange(0,8) ## don't include z=8 in SIMBA
-    
     epsilon_evo  = np.zeros(len(unique))
     evo_min    = np.zeros(len(unique))
     evo_max    = np.zeros(len(unique))

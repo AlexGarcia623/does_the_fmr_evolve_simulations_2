@@ -100,7 +100,7 @@ BLUE = './Data/'
 ### Constants
 h      = 6.774E-01
 xh     = 7.600E-01
-zo     = 3.500E-01
+zo     = 5.000E-01
 mh     = 1.6726219E-24
 kb     = 1.3806485E-16
 mc     = 1.270E-02
@@ -331,19 +331,19 @@ def get_all_redshifts(sim,all_z_fit,STARS_OR_GAS='gas',THRESHOLD=-5.00E-01):
         R_star    = np.load( currentDir + 'R_star.npy' )
         
         sfms_idx = sfmscut(star_mass, SFR, THRESHOLD, m_star_min)
-
-        desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
-                        (star_mass < 1.00E+01**(m_star_max)) &
-                        (gas_mass  > 1.00E+01**(m_gas_min))  &
-                        (sfms_idx))
+        if sim != "SIMBA": ## SIMBA saved differently
+            desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
+                            (star_mass < 1.00E+01**(m_star_max)) &
+                            (gas_mass  > 1.00E+01**(m_gas_min))  &
+                            (sfms_idx))
         
-        gas_mass  =  gas_mass[desired_mask]
-        star_mass = star_mass[desired_mask]
-        SFR       =       SFR[desired_mask]
-        Zstar     =     Zstar[desired_mask]
-        Zgas      =      Zgas[desired_mask]
-        R_gas     =     R_gas[desired_mask]
-        R_star    =    R_star[desired_mask]
+            gas_mass  =  gas_mass[desired_mask]
+            star_mass = star_mass[desired_mask]
+            SFR       =       SFR[desired_mask]
+            Zstar     =     Zstar[desired_mask]
+            Zgas      =      Zgas[desired_mask]
+            R_gas     =     R_gas[desired_mask]
+            R_star    =    R_star[desired_mask]
         
         all_Zgas     += list(Zgas     )
         all_Zstar    += list(Zstar    )
@@ -366,25 +366,20 @@ def get_all_redshifts(sim,all_z_fit,STARS_OR_GAS='gas',THRESHOLD=-5.00E-01):
     R_star    = np.array(all_R_star    )
     redshifts = np.array(redshifts     )
 
-    Zstar /= Zsun
     OH     = Zgas * (zo/xh) * (1.00/16.00)
 
     Zgas      = np.log10(OH) + 12
 
     # Get rid of nans and random values -np.inf
-    nonans    = ~(np.isnan(Zgas)) & ~(np.isnan(Zstar)) & (Zstar > 0.0) & (Zgas > 0.0) 
+    nonans    = ~(np.isnan(Zgas)) & (Zgas > 0.0) 
 
     sSFR      = SFR/star_mass
     
-    gas_mass  = gas_mass [nonans]
     star_mass = star_mass[nonans]
     SFR       = SFR      [nonans]
     sSFR      = sSFR     [nonans]
-    Zstar     = Zstar    [nonans]
     Zgas      = Zgas     [nonans]
     redshifts = redshifts[nonans]
-    R_gas     = R_gas    [nonans]
-    R_star    = R_star   [nonans]
 
     star_mass     = np.log10(star_mass)
     Zstar         = np.log10(Zstar)
@@ -433,29 +428,24 @@ def get_one_redshift(BLUE_DIR,snap,STARS_OR_GAS='gas',
     if "SIMBA" in BLUE_DIR: ## Simba is lower res -- higher minimum thresholds
         m_star_min = 9.0
         m_gas_min  = 9.5
-    
-    sfms_idx = sfmscut(star_mass, SFR, THRESHOLD, m_star_min)
+        
+    sfms_idx = sfmscut(star_mass, SFR, m_star_min = m_star_min)
+    if "SIMBA" not in BLUE_DIR:
+        desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
+                        (star_mass < 1.00E+01**(m_star_max)) &
+                        (gas_mass  > 1.00E+01**(m_gas_min))  &
+                        (sfms_idx))
 
-    desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
-                    (star_mass < 1.00E+01**(m_star_max)) &
-                    (gas_mass  > 1.00E+01**(m_gas_min))  &
-                    (sfms_idx))
-
-    gas_mass  = gas_mass [desired_mask]
-    star_mass = star_mass[desired_mask]
-    SFR       = SFR      [desired_mask]
-    Zstar     = Zstar    [desired_mask]
-    Zgas      = Zgas     [desired_mask]
-    R_gas     = R_gas    [desired_mask]
-    R_star    = R_star   [desired_mask]
-
-    Zstar /= Zsun
+        gas_mass  =  gas_mass[desired_mask]
+        star_mass = star_mass[desired_mask]
+        SFR       =       SFR[desired_mask]
+        Zgas      =      Zgas[desired_mask]
     
     OH     = Zgas * (zo/xh) * (1.00/16.00)
     Zgas   = np.log10(OH) + 12
 
     # Get rid of nans and random values -np.inf
-    nonans    = ~(np.isnan(Zgas)) & ~(np.isnan(Zstar)) & (Zstar > 0.0) & (Zgas > 0.0) 
+    nonans    = ~(np.isnan(Zgas)) & (Zgas > 0.0) 
 
     sSFR      = SFR/star_mass
 
@@ -463,14 +453,9 @@ def get_one_redshift(BLUE_DIR,snap,STARS_OR_GAS='gas',
 
     star_mass = star_mass[nonans]
     sSFR      = sSFR     [nonans]
-    Zstar     = Zstar    [nonans]
     Zgas      = Zgas     [nonans]
-    R_gas     = R_gas    [nonans]
-    R_star    = R_star   [nonans]
 
-    gas_mass      = np.log10(gas_mass)
     star_mass     = np.log10(star_mass)
-    Zstar         = np.log10(Zstar)
 
     if (STARS_OR_GAS == "GAS"):
         Z_use = Zgas
@@ -525,20 +510,21 @@ def get_z0_alpha(sim,STARS_OR_GAS='gas',function=None):
     R_gas     = np.load( currentDir + 'R_gas.npy' )
     R_star    = np.load( currentDir + 'R_star.npy' )
 
+    
     sfms_idx = sfmscut(star_mass, SFR, m_star_min = m_star_min)
+    if sim != "SIMBA":
+        desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
+                        (star_mass < 1.00E+01**(m_star_max)) &
+                        (gas_mass  > 1.00E+01**(m_gas_min))  &
+                        (sfms_idx))
 
-    desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
-                    (star_mass < 1.00E+01**(m_star_max)) &
-                    (gas_mass  > 1.00E+01**(m_gas_min))  &
-                    (sfms_idx))
-
-    gas_mass  =  gas_mass[desired_mask]
-    star_mass = star_mass[desired_mask]
-    SFR       =       SFR[desired_mask]
-    Zstar     =     Zstar[desired_mask]
-    Zgas      =      Zgas[desired_mask]
-    R_gas     =     R_gas[desired_mask]
-    R_star    =    R_star[desired_mask]
+        gas_mass  =  gas_mass[desired_mask]
+        star_mass = star_mass[desired_mask]
+        SFR       =       SFR[desired_mask]
+        Zstar     =     Zstar[desired_mask]
+        Zgas      =      Zgas[desired_mask]
+        R_gas     =     R_gas[desired_mask]
+        R_star    =    R_star[desired_mask]
 
     all_Zgas     += list(Zgas     )
     all_Zstar    += list(Zstar    )
@@ -562,18 +548,18 @@ def get_z0_alpha(sim,STARS_OR_GAS='gas',function=None):
     Zgas      = np.log10(OH) + 12
 
     # Get rid of nans and random values -np.inf
-    nonans    = ~(np.isnan(Zgas)) & ~(np.isnan(Zstar)) & (Zstar > 0.0) & (Zgas > 0.0) 
+    nonans    = ~(np.isnan(Zgas)) & (Zgas > 0.0) 
 
     sSFR      = SFR/star_mass
     
-    gas_mass  = gas_mass [nonans]
+    # gas_mass  = gas_mass [nonans]
     star_mass = star_mass[nonans]
     SFR       = SFR      [nonans]
     sSFR      = sSFR     [nonans]
-    Zstar     = Zstar    [nonans]
+    # Zstar     = Zstar    [nonans]
     Zgas      = Zgas     [nonans]
-    R_gas     = R_gas    [nonans]
-    R_star    = R_star   [nonans]
+    # R_gas     = R_gas    [nonans]
+    # R_star    = R_star   [nonans]
 
     star_mass     = np.log10(star_mass)
     Zstar         = np.log10(Zstar)
@@ -899,22 +885,21 @@ def get_alpha_min(sim, m_star_min, m_star_max, m_gas_min=8.5, STARS_OR_GAS='gas'
         R_gas     = np.load( currentDir + 'R_gas.npy' )
         R_star    = np.load( currentDir + 'R_star.npy' )
         
-        # Nominal threshold = -5.000E-01
-        sfms_idx = sfmscut(star_mass, SFR, THRESHOLD=THRESHOLD,
-                           m_star_min=m_star_min)
+#         sfms_idx = sfmscut(star_mass, SFR, THRESHOLD=THRESHOLD,
+#                            m_star_min=m_star_min)
 
-        desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
-                        (star_mass < 1.00E+01**(m_star_max)) &
-                        (gas_mass  > 1.00E+01**(m_gas_min))  &
-                        (sfms_idx))
+#         desired_mask = ((star_mass > 1.00E+01**(m_star_min)) &
+#                         (star_mass < 1.00E+01**(m_star_max)) &
+#                         (gas_mass  > 1.00E+01**(m_gas_min))  &
+#                         (sfms_idx))
 
-        gas_mass  = gas_mass [desired_mask]
-        star_mass = star_mass[desired_mask]
-        SFR       = SFR      [desired_mask]
-        Zstar     = Zstar    [desired_mask]
-        Zgas      = Zgas     [desired_mask]
-        R_gas     = R_gas    [desired_mask]
-        R_star    = R_star   [desired_mask]
+#         gas_mass  = gas_mass [desired_mask]
+#         star_mass = star_mass[desired_mask]
+#         SFR       = SFR      [desired_mask]
+#         Zstar     = Zstar    [desired_mask]
+#         Zgas      = Zgas     [desired_mask]
+#         R_gas     = R_gas    [desired_mask]
+#         R_star    = R_star   [desired_mask]
         
         Zstar /= Zsun
         OH     = Zgas * (zo/xh) * (1.00/16.00)
@@ -922,21 +907,16 @@ def get_alpha_min(sim, m_star_min, m_star_max, m_gas_min=8.5, STARS_OR_GAS='gas'
         Zgas      = np.log10(OH) + 12
 
         # Get rid of nans and random values -np.inf
-        nonans    = ~(np.isnan(Zgas)) & ~(np.isnan(Zstar)) & (Zstar > 0.0) & (Zgas > 0.0) 
+        nonans    = ~(np.isnan(Zgas)) & (Zgas > 0.0) 
 
         sSFR      = SFR/star_mass
 
-        gas_mass  = gas_mass [nonans]
         star_mass = star_mass[nonans]
         SFR       = SFR      [nonans]
         sSFR      = sSFR     [nonans]
-        Zstar     = Zstar    [nonans]
         Zgas      = Zgas     [nonans]
-        R_gas     = R_gas    [nonans]
-        R_star    = R_star   [nonans]
 
         star_mass = np.log10(star_mass)
-        Zstar     = np.log10(Zstar)
 
         alphas = np.linspace(0,1,100)        
         disps = np.ones(len(alphas)) * np.nan

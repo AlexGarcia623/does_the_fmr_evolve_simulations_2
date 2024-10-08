@@ -22,6 +22,8 @@ from helpers import (
 )
 mpl.rcParams['font.size'] = 15
 
+from statsmodels.tsa.stattools import adfuller
+import pymannkendall as mk
 
 savedir='./Figures (pdfs)/'
 
@@ -39,10 +41,11 @@ all_lower   = []
 all_upper   = []
 
 for index,sim in enumerate(sims):
+    print(sim)
     redshifts = np.arange(0,9)
-    if sim.upper() == "SIMBA":
-        redshifts = np.arange(0,8)
-    eps_evo, lower, upper, all_epsilons = get_epsilon_evo(sim, n_bootstrap=1000)
+    # if sim.upper() == "SIMBA":
+    #     redshifts = np.arange(0,8)
+    eps_evo, lower, upper, all_epsilons = get_epsilon_evo(sim, n_bootstrap=5)
     
     lower = eps_evo - lower
     lower = np.where(lower < 0, 0, lower)
@@ -98,6 +101,15 @@ for index,epss in enumerate(all_epsilon):
     ### For each simulation perform a t-test
     which_redshift_compare = 1
     hypothesized_value = epss[which_redshift_compare]
-    
+
     print(f'{sims[index].upper()}, compared to z={which_redshift_compare} epsilon value')
-    ttest(hypothesized_value, epss[1:])
+    
+    result = mk.original_test(epss[1:])
+    
+    l=20
+    print(f"\t{'Trend':<{l}}: {result.trend}")
+    print(f"\t{'S-statistic':<{l}}: {result.s:0.3f}")
+    print(f"\t{'P-value':<{l}}: {result.p:0.3E}")
+    print(f"\t{'Reject (0.05 level)':<{l}}: {result.h}")
+
+    # ttest(hypothesized_value, epss[1:])

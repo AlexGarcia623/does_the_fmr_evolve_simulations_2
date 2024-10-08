@@ -6,9 +6,11 @@ This repo contains the analysis scripts, figures, and data products from the pap
 
 ### Data:
 
-Contains minimal working example data for generation of the figures associated with this work for Illustris, IllustrisTNG, EAGLE, and SIMBA simulations from redshift 0-8 (technically 0-10, though none of 9 and 10 are used in this work).
+Contains minimal working example data for generation of the figures associated with this work for Illustris, IllustrisTNG, EAGLE, and SIMBA simulations from redshift 0-8.
 
 All credit for simulation data goes to the respective collaborations: see [Illustris](https://www.illustris-project.org/), [IllustrisTNG](https://www.tng-project.org/), [EAGLE](https://icc.dur.ac.uk/Eagle/), and [SIMBA](http://simba.roe.ac.uk/).
+
+Also includes data from particles on different metallicity types in the simulations. This data is used to support the findings of Appendix B.
 
 ### Data Reduction
 
@@ -33,6 +35,8 @@ Individual Figures:
 - appendix_B1.py -- Generate Figure B1
 - appendix_B2.py -- Generate Figure B2
 - appendix_C1.py -- Generate Figure C1
+- appendix_C2.py -- Generate Figure C2
+- appendix_D1.py -- Generate Figure D1
 - Figure1.key -- Keynote file used to make Figure 7
 - Figure2.py  -- Generate Figure 2
 - Figure3.py  -- Generate Figure 3
@@ -44,10 +48,10 @@ Individual Figures:
 
 Helpers
 
+- alpha_types -- Contains useful functions for epsilon portion of analysis (alpha name carried over from previous study)
+- Curti.py    -- Contains functions related to Appendix B
 - helpers.py  -- Contains helper functions for all files
 - plotting.py -- Contains useful functions for plotting
-- Curti.py    -- Contains functions related to Appendix B
-- alpha_types -- Contains useful functions for epsilon portion of analysis (alpha name carried over from previous study)
 
 ## Questions Regarding scripts/paper
 

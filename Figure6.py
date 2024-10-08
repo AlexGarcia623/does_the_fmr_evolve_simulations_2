@@ -106,7 +106,7 @@ for index, sim in enumerate(sims):
     ax_fake.set_ylim(YMIN, YMAX)
     ax_real.set_ylim(YMIN, YMAX)
 
-    ax_offsets.set_ylim(-0.39,0.49)
+    ax_offsets.set_ylim(-0.475,0.625)
 
     
     if index == 0:

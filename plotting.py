@@ -330,8 +330,8 @@ def make_MZR_prediction_fig_epsilon(sim,ax_real,ax_fake,ax_offsets,
     min_alpha, *_ = get_z0_alpha(sim,function=linear)
     
     for jjj, redshift in enumerate(unique):
-        if sim == "SIMBA" and redshift > 7:
-            continue
+        # if sim == "SIMBA" and redshift > 7:
+        #     continue
         this_redshift = redshift == redshifts
         mbins, zbins, Sbins = get_medians(star_mass[this_redshift],
                                           Z_true[this_redshift],
@@ -367,9 +367,14 @@ def make_MZR_prediction_fig_epsilon(sim,ax_real,ax_fake,ax_offsets,
                         label="$z=%s$" %jjj, lw=lw)
 
     MSE = sum_residuals / n_data
-    ax_offsets.text(0.075, 0.07,
+    xloc = 0.075
+    ha   = 'left'
+    if sim == "SIMBA":
+        xloc = 0.975
+        ha = 'right'
+    ax_offsets.text(xloc, 0.07,
                 r'$\xi = \;$' + fr"${MSE:0.3f}$" + r'$\;({\rm dex })^2$',
-                transform=ax_offsets.transAxes, fontsize=16)
+                transform=ax_offsets.transAxes, fontsize=16, ha=ha)
         
     return colors, MSE
     

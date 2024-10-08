@@ -220,9 +220,6 @@ def do(ax,sim,c,STARS_OR_GAS='gas'):
     
     z0_alpha, z0_a, z0_b = 0,0,0
     
-    if sim == "SIMBA": ## Remove z=8 in SIMBA
-        snapshots = snapshots[:-1]
-    
     y_dat = [] ## For Arnab
     y_err = [] ## For Arnab
     
@@ -289,13 +286,11 @@ def do(ax,sim,c,STARS_OR_GAS='gas'):
     ax.set_xticks( np.arange(0,10) )     
     
     redshifts = np.arange(0,9) 
-    if sim == "SIMBA":
-        redshifts = redshifts[:-1]
         
     popt   = np.polyfit( redshifts, means, 1 )
     interp = np.polyval( popt, redshifts )
     
-    ax.plot( redshifts, interp, color=c, lw=2.5, linestyle='--' )
+    # ax.plot( redshifts, interp, color=c, lw=2.5, linestyle='--' )
     
     ax.axhline(0, color='gray', linestyle=':', alpha=0.5)
     
