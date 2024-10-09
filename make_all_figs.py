@@ -5,7 +5,7 @@ file_names = [
     'Figure2.py'   , 'Figure3.py'   , 'Figure4.py'   ,
     'Figure5.py'   , 'Figure6.py'   , 'Figure8.py'   ,
     'AppendixA1.py', 'AppendixB1.py', 'AppendixB2.py',
-    'AppendixC1.py'
+    'AppendixC1.py', 'AppendixC2.py', 'AppendixD1.py'
 ]
 
 for file_name in file_names:

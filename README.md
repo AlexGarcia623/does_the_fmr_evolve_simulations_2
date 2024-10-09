@@ -48,10 +48,11 @@ Individual Figures:
 
 Helpers
 
-- alpha_types -- Contains useful functions for epsilon portion of analysis (alpha name carried over from previous study)
-- Curti.py    -- Contains functions related to Appendix B
-- helpers.py  -- Contains helper functions for all files
-- plotting.py -- Contains useful functions for plotting
+- alpha_types       -- Contains useful functions for epsilon portion of analysis (alpha name carried over from previous study)
+- Curti.py          -- Contains functions related to Appendix C
+- helpers.py        -- Contains helper functions for all files
+- helpers_appendixB -- Contains helper functions for Appendix B
+- plotting.py       -- Contains useful functions for plotting
 
 ## Questions Regarding scripts/paper
 
