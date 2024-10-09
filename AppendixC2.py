@@ -1,5 +1,5 @@
 '''
-This file is used to create Figure C1 of "Does the fundamental 
+This file is used to create Figure C2 of "Does the fundamental 
 metallicity relation evolve with redshift? II: The Evolution in
 Normalisation of the Mass-Metallicity Relation"
 #
@@ -13,15 +13,14 @@ import matplotlib as mpl
 mpl.use('agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
-### Import from this library
+### From this library
 from plotting import (
-    make_MZR_prediction_fig,
+    make_MZR_prediction_fig_Curti,
     linear, fourth_order, format_func
 )    
 from helpers import (
-    WHICH_SIM_TEX
+    WHICH_SIM_TEX, Curti_FMR
 )
-### Change rcParams for this plot
 mpl.rcParams['axes.linewidth'] = 3.5
 mpl.rcParams['xtick.major.width'] = 2.75
 mpl.rcParams['ytick.major.width'] = 2.75
@@ -38,14 +37,11 @@ sims = ['original','tng','eagle','simba']
 savedir = './Figures (pdfs)/'
 STARS_OR_GAS = "gas".upper()
 
-### Initialize Figure
 fig, axs_all = plt.subplots(4,4,figsize=(11,13),
                             gridspec_kw={'width_ratios': [1, 1, 0.4, 1]},
                             sharex=True)
 
-function = fourth_order
-## Figure4: function = linear
-## Appendix B1: function = fourth_order
+function = Curti_FMR
 
 ax_column1 = []
 ax_column2 = []
@@ -65,13 +61,15 @@ for index, sim in enumerate(sims):
 
     ax_blank.axis('off')
 
-    colors, MSE = make_MZR_prediction_fig(sim,False, ax_real, ax_fake,
-                                          ax_offsets,function = function)
+    colors, MSE = make_MZR_prediction_fig_Curti(sim,False, ax_real, ax_fake,
+                                                ax_offsets,function = function)
 
     if index == 3:
         for ax in axs:
             ax.set_xlabel(r'$\log(M_*~[M_\odot])$')
-
+    # if index == 0:
+    #     ax_fake.text(0.05,0.9,r'$z=0~{\rm Fit~FMR}$', transform=ax_fake.transAxes, fontsize=14)
+    # else:
     for ax in axs:
         ax.yaxis.set_major_formatter(FuncFormatter(format_func))
 
@@ -81,13 +79,17 @@ for index, sim in enumerate(sims):
     for ax in [ax_real, ax_fake]:
         ax.set_ylim(ymin, ymax)
 
+    # ax_fake.sharex(ax_real)
+    # ax_offsets.sharex(ax_real)
     ax_real.set_xticks([8,9,10,11])
 
     ax_real.set_ylabel(r'$\log({\rm O/H}) + 12~{\rm (dex)}$')
     ax_fake.set_yticklabels([])
     ax_offsets.set_ylabel(r'${\rm True} - {\rm Predicted}$')
 
-    ax_real.text(0.05,0.85,WHICH_SIM_TEX[sim.upper()],transform=ax_real.transAxes)
+    x_loc = 0.05
+    x_align = 'left'
+    ax_real.text(x_loc,0.85,WHICH_SIM_TEX[sim.upper()],transform=ax_real.transAxes,ha=x_align)
 
     if index == 0:
         ax_real.text(0.5,1.05,r'${\rm True~MZR}$',transform=ax_real.transAxes,ha='center',fontsize=28)
@@ -98,20 +100,13 @@ for index, sim in enumerate(sims):
 
     if index == 0:
         YMIN, YMAX = ax_real.get_ylim()
-        if function == fourth_order:
-            YMIN *= 0.95
-    
-    if index == 0 and function==fourth_order:
-        ax_fake.text(0.05,0.85 ,r'${\rm Fourth-order}$',transform=ax_fake.transAxes, fontsize=18)
-        ax_fake.text(0.05,0.775,r'${\rm Polynomial}$',transform=ax_fake.transAxes, fontsize=18)
-    
+        YMAX *= 1.05
+        ax_fake.text(0.05,0.85,r'${\rm Curti+(2020)~FMR}$',transform=ax_fake.transAxes, fontsize=18)
+        
     ax_fake.set_ylim(YMIN, YMAX)
     ax_real.set_ylim(YMIN, YMAX)
 
-    if function == linear:
-        ax_offsets.set_ylim(-0.7,0.15)
-    elif function == fourth_order:
-        ax_offsets.set_ylim(-0.8,0.8)
+    ax_offsets.set_ylim(-0.85,0.79)
     
     if index == 0:
         leg = ax_offsets.legend(frameon=True,labelspacing=0.05,
@@ -122,8 +117,7 @@ for index, sim in enumerate(sims):
         for index, text in enumerate(leg.get_texts()):
             text.set_color(colors[index])
         leg.get_frame().set_linewidth(3)
-
-
+        
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.0, hspace=0.0)
-plt.savefig( savedir + 'AppendixC1.pdf', bbox_inches='tight')
+plt.savefig( savedir + 'AppendixC2.pdf', bbox_inches='tight')

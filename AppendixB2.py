@@ -12,112 +12,88 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('agg')
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
+import cmasher as cmr
+from scipy.interpolate import interp1d
 ### From this library
-from plotting import (
-    make_MZR_prediction_fig_Curti,
-    linear, fourth_order, format_func
-)    
-from helpers import (
-    WHICH_SIM_TEX, Curti_FMR
+from helpers_AppendixB import (
+    get_all_redshifts, WHICH_SIM_TEX, get_medians
 )
-mpl.rcParams['axes.linewidth'] = 3.5
-mpl.rcParams['xtick.major.width'] = 2.75
-mpl.rcParams['ytick.major.width'] = 2.75
-mpl.rcParams['xtick.minor.width'] = 1.75
-mpl.rcParams['ytick.minor.width'] = 1.75
-mpl.rcParams['xtick.major.size'] = 10
-mpl.rcParams['ytick.major.size'] = 10
-mpl.rcParams['xtick.minor.size'] = 5
-mpl.rcParams['ytick.minor.size'] = 5
-
-
-sims = ['original','tng','eagle','simba']
+mpl.rcParams['font.size'] = 16
 
 savedir = './Figures (pdfs)/'
-STARS_OR_GAS = "gas".upper()
 
-fig, axs_all = plt.subplots(4,4,figsize=(11,13),
-                            gridspec_kw={'width_ratios': [1, 1, 0.4, 1]},
-                            sharex=True)
+sims = ["original",'tng','eagle','simba']
 
-function = Curti_FMR
+width = 0.1
 
-ax_column1 = []
-ax_column2 = []
-ax_column3 = []
+N = 9
+cmap = cmr.get_sub_cmap('cmr.guppy', 0.0, 1.0, N=N)
+newcolors = np.linspace(0, 1, N)
+colors = [ cmap(x) for x in newcolors[::-1] ]
 
-YMIN, YMAX = 0,0
+fig, axs_MZR = plt.subplots(2, 2, figsize = (8.25,5.75), sharex=True, sharey=True)
 
-for index, sim in enumerate(sims):
-    axs = axs_all[index,:]
-    ax_real = axs[0]
-    ax_column1.append(ax_real)
-    ax_fake = axs[1]
-    ax_column2.append(ax_fake)
-    ax_blank = axs[2]
-    ax_offsets = axs[3]
-    ax_column3.append(ax_offsets)
-
-    ax_blank.axis('off')
-
-    colors, MSE = make_MZR_prediction_fig_Curti(sim,False, ax_real, ax_fake,
-                                                ax_offsets,function = function)
-
-    if index == 3:
-        for ax in axs:
-            ax.set_xlabel(r'$\log(M_*~[M_\odot])$')
-    # if index == 0:
-    #     ax_fake.text(0.05,0.9,r'$z=0~{\rm Fit~FMR}$', transform=ax_fake.transAxes, fontsize=14)
-    # else:
-    for ax in axs:
-        ax.yaxis.set_major_formatter(FuncFormatter(format_func))
-
-    ymin = min(ax_real.get_ylim()[0], ax_fake.get_ylim()[0])
-    ymax = max(ax_real.get_ylim()[1], ax_fake.get_ylim()[1])
-
-    for ax in [ax_real, ax_fake]:
-        ax.set_ylim(ymin, ymax)
-
-    # ax_fake.sharex(ax_real)
-    # ax_offsets.sharex(ax_real)
-    ax_real.set_xticks([8,9,10,11])
-
-    ax_real.set_ylabel(r'$\log({\rm O/H}) + 12~{\rm (dex)}$')
-    ax_fake.set_yticklabels([])
-    ax_offsets.set_ylabel(r'${\rm True} - {\rm Predicted}$')
-
-    x_loc = 0.05
-    x_align = 'left'
-    ax_real.text(x_loc,0.85,WHICH_SIM_TEX[sim.upper()],transform=ax_real.transAxes,ha=x_align)
-
-    if index == 0:
-        ax_real.text(0.5,1.05,r'${\rm True~MZR}$',transform=ax_real.transAxes,ha='center',fontsize=28)
-        ax_fake.text(0.5,1.05,r'${\rm Predicted~MZR}$',transform=ax_fake.transAxes,ha='center',fontsize=28)
-        ax_offsets.text(0.5,1.05,r'${\rm Residuals}$',transform=ax_offsets.transAxes,ha='center',fontsize=28)
-
-    ax_offsets.axhline(0.0, color='k', linestyle=':', lw=3)
-
-    if index == 0:
-        YMIN, YMAX = ax_real.get_ylim()
-        YMAX *= 1.05
-        ax_fake.text(0.05,0.85,r'${\rm Curti+(2020)~FMR}$',transform=ax_fake.transAxes, fontsize=18)
-        
-    ax_fake.set_ylim(YMIN, YMAX)
-    ax_real.set_ylim(YMIN, YMAX)
-
-    ax_offsets.set_ylim(-0.85,0.79)
+axs = axs_MZR.flatten()
     
-    if index == 0:
-        leg = ax_offsets.legend(frameon=True,labelspacing=0.05,
-                                handletextpad=0, handlelength=0, 
-                                markerscale=-1,bbox_to_anchor=(1,1.05),
-                                framealpha=1, edgecolor='k',fancybox=False)
-        for i in range(len(leg.get_texts())): leg.legendHandles[i].set_visible(False)
-        for index, text in enumerate(leg.get_texts()):
-            text.set_color(colors[index])
-        leg.get_frame().set_linewidth(3)
+for plot_index, sim in enumerate(sims):
+    sim = sim.upper()
+    star_mass, metallicity, redshift = get_all_redshifts(sim, metal_type='Subfind_so')
+    _, metallicity2, _ = get_all_redshifts(sim, metal_type='SFRonlyAll')
+    
+    ax = axs[plot_index]
+    all_offsets = []
+    for redshift_index, z in enumerate(np.unique(redshift)):
+        z_mask = (redshift == z) & (~np.isnan(metallicity)) & (~np.isnan(metallicity2))
+
+        real_mass   = star_mass[z_mask]
+        scale = 0.5
+        real_metal  = metallicity[z_mask] + np.log10(scale/0.35) ## Change from previous
+        real_metal2 = metallicity2[z_mask]
+        real_sfr    = np.zeros(len(real_mass)) ## don't care about this for now
+
+
+        MZR_M_real1, MZR_Z_real, *_ = get_medians(real_mass,real_metal,real_sfr,
+                                                 width=width,min_samp=20)
+
+        MZR_M_real, MZR_Z2_real, *_ = get_medians(real_mass, real_metal2, real_sfr,
+                                                  width=width, min_samp=20)
         
+        assert(len(MZR_Z_real) == len(MZR_Z2_real))
+        
+        MZR_M_real -= width/2 ## Center bins
+
+        color = colors[redshift_index]
+        lw = 2.5
+        ax.plot( MZR_Z2_real, MZR_Z_real, color=color,
+                 label=r'$z=%s$' %redshift_index, lw=lw )
+    
+    ax.text( 0.05, 0.825, WHICH_SIM_TEX[sim],
+                     transform=ax.transAxes )
+
+leg = axs[1].legend(frameon=True,labelspacing=0.05,
+                    handletextpad=0, handlelength=0, 
+                    markerscale=-1,bbox_to_anchor=(1.0,1.05),
+                    framealpha=1, edgecolor='black',fancybox=False)
+for i in range(len(leg.get_texts())): leg.legendHandles[i].set_visible(False)
+for index, text in enumerate(leg.get_texts()):
+    text.set_color(colors[index])
+leg.get_frame().set_linewidth(2.5)
+
+xmin, xmax = axs[0].get_xlim()
+for ax in axs:
+    line1, = ax.plot([xmin,xmax],[xmin,xmax],color='k', lw=2, alpha=0.75, zorder=-1)
+    line2  = ax.fill_between([xmin,xmax],[xmin-0.1,xmax-0.1],[xmin+0.1,xmax+0.1], color='gray', alpha=0.33)
+axs[0].set_xlim(xmin,xmax); axs[0].set_ylim(xmin,xmax)
+handles = [line1, line2]
+labels  = [r'${\rm Equality~Line}$',r'$\pm0.1~{\rm dex}$']
+
+legend = axs[3].legend(handles=handles, labels=labels, loc='center left',
+                       frameon=False, bbox_to_anchor=(0.45,1.15), fontsize=12)
+
+axs[0].text(-0.15,0,r'$\log{(\rm O/H)} + 12~({\rm dex})~[{\rm Scaled~Z}]$',
+            ha='center', va='center', rotation=90, transform=axs[0].transAxes)
+axs[2].text(1.0,-0.175,r'$\log{(\rm O/H)} + 12~({\rm dex})~[{\rm Direct~O~\&~H}]$', ha='center',
+            transform=axs[2].transAxes)
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.0, hspace=0.0)
-plt.savefig( savedir + 'FigureB2.pdf', bbox_inches='tight')
+plt.savefig(savedir+'AppendixB2.pdf', bbox_inches='tight')

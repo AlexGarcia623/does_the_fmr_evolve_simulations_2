@@ -12,118 +12,115 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('agg')
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
-### Import from this library
-from plotting import (
-    make_MZR_prediction_fig,
-    linear, fourth_order, format_func
-)    
-from helpers import (
-    WHICH_SIM_TEX
+import cmasher as cmr
+### From this library
+from helpers_AppendixB import (
+    get_all_redshifts, WHICH_SIM_TEX, get_medians
 )
-### Change rcParams for this plot
-mpl.rcParams['axes.linewidth'] = 3.5
-mpl.rcParams['xtick.major.width'] = 2.75
-mpl.rcParams['ytick.major.width'] = 2.75
-mpl.rcParams['xtick.minor.width'] = 1.75
-mpl.rcParams['ytick.minor.width'] = 1.75
-mpl.rcParams['xtick.major.size'] = 10
-mpl.rcParams['ytick.major.size'] = 10
-mpl.rcParams['xtick.minor.size'] = 5
-mpl.rcParams['ytick.minor.size'] = 5
-
-
-sims = ['original','tng','eagle','simba']
+mpl.rcParams['font.size'] = 16
 
 savedir = './Figures (pdfs)/'
-STARS_OR_GAS = "gas".upper()
 
-### Initialize Figure
-fig, axs_all = plt.subplots(4,4,figsize=(11,13),
-                            gridspec_kw={'width_ratios': [1, 1, 0.4, 1]},
-                            sharex=True)
+sims = ["original",'tng','eagle','simba']
 
-function = fourth_order
-## Figure4: function = linear
-## Appendix B1: function = fourth_order
+width = 0.1
 
-ax_column1 = []
-ax_column2 = []
-ax_column3 = []
+N = 9
+cmap = cmr.get_sub_cmap('cmr.guppy', 0.0, 1.0, N=N)
+newcolors = np.linspace(0, 1, N)
+colors = [ cmap(x) for x in newcolors[::-1] ]
 
-YMIN, YMAX = 0,0
+fig, axs_MZR = plt.subplots(2, 2, figsize = (8,5.75), sharex=True, sharey=True)
 
-for index, sim in enumerate(sims):
-    axs = axs_all[index,:]
-    ax_real = axs[0]
-    ax_column1.append(ax_real)
-    ax_fake = axs[1]
-    ax_column2.append(ax_fake)
-    ax_blank = axs[2]
-    ax_offsets = axs[3]
-    ax_column3.append(ax_offsets)
+axs = axs_MZR.flatten()
 
-    ax_blank.axis('off')
-
-    colors, MSE = make_MZR_prediction_fig(sim,False, ax_real, ax_fake,
-                                          ax_offsets,function = function)
-
-    if index == 3:
-        for ax in axs:
-            ax.set_xlabel(r'$\log(M_*~[M_\odot])$')
-
-    for ax in axs:
-        ax.yaxis.set_major_formatter(FuncFormatter(format_func))
-
-    ymin = min(ax_real.get_ylim()[0], ax_fake.get_ylim()[0])
-    ymax = max(ax_real.get_ylim()[1], ax_fake.get_ylim()[1])
-
-    for ax in [ax_real, ax_fake]:
-        ax.set_ylim(ymin, ymax)
-
-    ax_real.set_xticks([8,9,10,11])
-
-    ax_real.set_ylabel(r'$\log({\rm O/H}) + 12~{\rm (dex)}$')
-    ax_fake.set_yticklabels([])
-    ax_offsets.set_ylabel(r'${\rm True} - {\rm Predicted}$')
-
-    ax_real.text(0.05,0.85,WHICH_SIM_TEX[sim.upper()],transform=ax_real.transAxes)
-
-    if index == 0:
-        ax_real.text(0.5,1.05,r'${\rm True~MZR}$',transform=ax_real.transAxes,ha='center',fontsize=28)
-        ax_fake.text(0.5,1.05,r'${\rm Predicted~MZR}$',transform=ax_fake.transAxes,ha='center',fontsize=28)
-        ax_offsets.text(0.5,1.05,r'${\rm Residuals}$',transform=ax_offsets.transAxes,ha='center',fontsize=28)
-
-    ax_offsets.axhline(0.0, color='k', linestyle=':', lw=3)
-
-    if index == 0:
-        YMIN, YMAX = ax_real.get_ylim()
-        if function == fourth_order:
-            YMIN *= 0.95
+for plot_index, sim in enumerate(sims):
+    sim = sim.upper()
+    ## Sorry... metallicity => ZO for this script... too lazy to rewrite
+    star_mass, metallicity, redshift = get_all_redshifts(sim, metal_type='ZO')
     
-    if index == 0 and function==fourth_order:
-        ax_fake.text(0.05,0.85 ,r'${\rm Fourth-order}$',transform=ax_fake.transAxes, fontsize=18)
-        ax_fake.text(0.05,0.775,r'${\rm Polynomial}$',transform=ax_fake.transAxes, fontsize=18)
+    ax = axs[plot_index]
     
-    ax_fake.set_ylim(YMIN, YMAX)
-    ax_real.set_ylim(YMIN, YMAX)
+    for redshift_index, z in enumerate(np.unique(redshift)):
+        z_mask = (redshift == z) & (~np.isnan(metallicity))
 
-    if function == linear:
-        ax_offsets.set_ylim(-0.7,0.15)
-    elif function == fourth_order:
-        ax_offsets.set_ylim(-0.5,0.5)
+        real_mass  = star_mass[z_mask]
+        real_metal = metallicity[z_mask]
+        real_sfr   = np.zeros(len(real_mass))
+
+
+        MZR_M_real, MZR_Z_real, real_SFR, scatter_Z = get_medians(real_mass,real_metal,real_sfr,
+                                                                  width=width,min_samp=20)
+        
+        MZR_M_real -= width/2 ## Center bins
+
+        color = colors[redshift_index]
+        lw = 2.5
+        ax.plot( MZR_M_real, MZR_Z_real, color=color,
+                         label=r'$z=%s$' %redshift_index, lw=lw )
+
+        ax.fill_between( MZR_M_real, MZR_Z_real - scatter_Z, MZR_Z_real + scatter_Z, color=color, alpha=0.2 )
+        
+    star_mass, metallicity, redshift = get_all_redshifts(sim, metal_type='XH')
     
-    if index == 0:
-        leg = ax_offsets.legend(frameon=True,labelspacing=0.05,
-                                handletextpad=0, handlelength=0, 
-                                markerscale=-1,bbox_to_anchor=(1,1.05),
-                                framealpha=1, edgecolor='k',fancybox=False)
-        for i in range(len(leg.get_texts())): leg.legendHandles[i].set_visible(False)
-        for index, text in enumerate(leg.get_texts()):
-            text.set_color(colors[index])
-        leg.get_frame().set_linewidth(3)
+    ax = axs[plot_index]
+    
+    for redshift_index, z in enumerate(np.unique(redshift)):
+        z_mask = (redshift == z) & (~np.isnan(metallicity))
 
+        real_mass  = star_mass[z_mask]
+        real_metal = metallicity[z_mask]
+        real_sfr   = np.zeros(len(real_mass))
+
+
+        MZR_M_real, MZR_Z_real, real_SFR, scatter_Z = get_medians(real_mass,real_metal,real_sfr,
+                                                                  width=width,min_samp=20)
+        
+        MZR_M_real -= width/2 ## Center bins
+
+        color = colors[redshift_index]
+        lw = 2.5
+        ax.plot( MZR_M_real, MZR_Z_real, color=color, lw=lw, ls='--' )
+
+        ax.fill_between( MZR_M_real, MZR_Z_real - scatter_Z, MZR_Z_real + scatter_Z, color=color, alpha=0.2 )
+        
+    ax.text( 0.05, 0.1, WHICH_SIM_TEX[sim],
+                 transform=ax.transAxes )
+
+ymin, ymax = axs[0].get_ylim()
+xmin, _ = axs[0].get_xlim()
+axs[0].set_xlim(xmin, 12.1)
+axs[0].set_xticks([8,9,10,11])
+axs[0].set_yticks([0.3,0.4,0.5,0.6,0.7])
+
+leg = axs[1].legend(frameon=True,labelspacing=0.05,
+                    handletextpad=0, handlelength=0, 
+                    markerscale=-1,bbox_to_anchor=(1.275,1.05),
+                    framealpha=1, edgecolor='black',fancybox=False)
+for i in range(len(leg.get_texts())): leg.legendHandles[i].set_visible(False)
+for index, text in enumerate(leg.get_texts()):
+    text.set_color(colors[index])
+leg.get_frame().set_linewidth(2.5)
+
+axs[0].text(-0.133,0,r'${\rm Ratio}$',
+            ha='center', va='center', rotation=90, transform=axs[0].transAxes)
+axs[2].text(1.0,-0.175,r'$\log (M_*~[M_\odot])$', ha='center',
+            transform=axs[2].transAxes)
+
+xmin, xmax = axs[0].get_xlim()
+ymin, ymax = axs[0].get_ylim()
+for ax in axs:
+    line1, = ax.plot([xmin-1,xmin-1],[xmin-1,xmin-1],color='k', lw=2.5 )
+    line2, = ax.plot([xmin-1,xmin-1],[xmin-1,xmin-1],color='k', lw=2.5, ls='--' )
+handles = [line2, line1]
+labels  = [r'$X_{\rm H}$',r'$f_{\rm O}$']
+
+legend = axs[3].legend(handles=handles, labels=labels, loc='center left',
+                       frameon=False, bbox_to_anchor=(0.675,1.15), fontsize=12)
+
+axs[0].set_xlim(xmin, xmax)
+axs[0].set_ylim(ymin, ymax)
 
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.0, hspace=0.0)
-plt.savefig( savedir + 'FigureB1.pdf', bbox_inches='tight')
+plt.savefig(savedir+'AppendixB1.pdf', bbox_inches='tight')
