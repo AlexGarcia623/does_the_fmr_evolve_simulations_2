@@ -442,6 +442,8 @@ def make_MZR_fig(sim,ax,STARS_OR_GAS="gas",
         
         color = colors[index]
         lw = 2.5
+        np.save(f'./npy_data/MZR/{sim}_z={index}_mass.npy', MZR_M_real)
+        np.save(f'./npy_data/MZR/{sim}_z={index}_metallicity.npy', MZR_Z_real)
         ax.plot( MZR_M_real, MZR_Z_real, color=color,
                       label=r'$z=%s$' %index, lw=lw )
     
@@ -465,13 +467,13 @@ def make_MZR_fig(sim,ax,STARS_OR_GAS="gas",
             else:
                 y_dat_105.append( np.nan )
     ## Data for Arnab
-    if sim != 'SIMBA':
-        np.save(f'./arnab_data/{sim}_8_Fig8.npy',y_dat_8)
-    np.save(f'./arnab_data/{sim}_9_Fig8.npy',y_dat_9)
-    np.save(f'./arnab_data/{sim}_10_Fig8.npy',y_dat_10)
-    np.save(f'./arnab_data/{sim}_105_Fig8.npy',y_dat_105)
-    if sim == "SIMBA":
-        np.save('./arnab_data/x_axis_both.npy',np.arange(0,9))
+    ## if sim != 'SIMBA':
+    ##    np.save(f'./arnab_data/{sim}_8_Fig8.npy',y_dat_8)
+    ## np.save(f'./arnab_data/{sim}_9_Fig8.npy',y_dat_9)
+    ## np.save(f'./arnab_data/{sim}_10_Fig8.npy',y_dat_10)
+    ## np.save(f'./arnab_data/{sim}_105_Fig8.npy',y_dat_105)
+    ## if sim == "SIMBA":
+    ##    np.save('./arnab_data/x_axis_both.npy',np.arange(0,9))
     
     ## Get difference between z=0 minimum metallicity and all others
     Z_min_bin_no_subtract = np.array(Z_min_bin)
@@ -586,6 +588,8 @@ def make_SFMS_fig(sim,ax,STARS_OR_GAS="gas",
         
         color = colors[index]
         lw = 2.5
+        np.save(f'./npy_data/SFMS/{sim}_z={index}_mass.npy',MZR_M_real)
+        np.save(f'./npy_data/SFMS/{sim}_z={index}_sfr.npy',real_SFR)
         ax.plot( MZR_M_real, np.log10(real_SFR), color=color,
                       label=r'$z=%s$' %index, lw=lw )
 
